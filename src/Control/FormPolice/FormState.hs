@@ -1,11 +1,21 @@
-module Control.FormPolice.FormState where
+module Control.FormPolice.FormState 
+  ( FormState
+  , createState
+  , getParams 
+  ) where
   
-  import          Data.Aeson (Object)  
+  import          Data.Aeson (Value(..), Object)  
 
   data FormState 
     = FormState {
-      fsParam :: Object
+      fsParams :: Value
     }
 
-  createState :: Object -> FormState
+  createState :: Value -> FormState
   createState params = FormState params
+
+  getParams :: FormState -> Object
+  getParams formState = 
+    case fsParams formState of
+      (Object o) -> o
+      _          -> error "peligro!"

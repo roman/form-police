@@ -3,23 +3,34 @@ module Control.FormPolice.FormT.Tests
 
   import           Test.Framework (Test)
   import           Test.Framework.Providers.HUnit (testCase)
-
-  import qualified Data.Map as O
+  import           Test.HUnit (assertEqual, assertBool)
 
   import           Data.Text (Text)
-
-  import           Test.HUnit (assertEqual)
+  import           Data.Aeson (object, (.=))
+  import           Data.Maybe (fromJust, isNothing)
 
   import           Control.FormPolice.FormT
 
   tests :: [Test]
-  tests = [ testRunFormT ]
+  tests = [ testRunFormT 
+          , testGetParamReturnsValue 
+          , testGetParamReturnsNothing ]
 
 
   testRunFormT :: Test
-  testRunFormT = testCase "runFormT should run successfuly" $ do
+  testRunFormT = testCase "runFormT executes successfuly" $ do
     let value = ("" :: Text)
-    (result, _) <- runFormT (return "") O.empty
+    (result, _) <- runFormT (return "") (object [])
     assertEqual "runFormT doesn't execute correctly" value result
 
+  testGetParamReturnsValue :: Test
+  testGetParamReturnsValue = testCase "getParam returns 'Just value' from form JSON object" $ do
+    let value = "john" :: Text
+    (result, _) <- runFormT (getParam "name") (object ["name" .= value])
+    assertEqual "getParam is not returning correct value" value (fromJust result)
+
+  testGetParamReturnsNothing :: Test
+  testGetParamReturnsNothing = testCase "getParam returns 'Nothing' when key not on form JSON object" $ do
+    (result, _) <- runFormT (getParam "name") (object [])  
+    assertBool "getParam is not returning 'Nothing'" (isNothing (result :: Maybe Text))
 

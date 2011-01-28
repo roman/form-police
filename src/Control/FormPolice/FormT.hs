@@ -1,20 +1,31 @@
 module Control.FormPolice.FormT 
-  ( 
-    FormT
+  ( FormState
+  , FormT
   , runFormT
-  , FormState
+
+  , getParam
+
   ) where
 
-  import           Data.Aeson (Object)
+  import           Data.Text (Text)
+  import           Data.Aeson (FromJSON, Object, Value, (.:))
 
-  import           Control.Monad.State (StateT, runStateT)
+  import           Control.Monad (liftM)
+  import           Control.Monad.State (StateT, runStateT, get)
 
   import           Control.FormPolice.FormState (FormState)
   import qualified Control.FormPolice.FormState as FS
 
   newtype FormT m a = FormT (StateT FormState m a) deriving (Monad)
 
-  runFormT :: (Monad m) => FormT m a -> Object -> m (a, FormState)
+  runFormT :: (Monad m) => FormT m a -> Value -> m (a, FormState)
   runFormT (FormT m) value = runStateT m (FS.createState value)
+
+  getParams :: (Monad m) => FormT m Object
+  getParams = FormT (FS.getParams `liftM` get)
+
+  getParam :: (FromJSON a, Monad m) => Text -> FormT m (Maybe a)
+  getParam key = (.: key) `liftM` getParams
+    
 
   
