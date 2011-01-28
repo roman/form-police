@@ -1,0 +1,8 @@
+.hpc/*
+dist/*
+tests/dist/*
+tests/.hpc/*
+*.swp
+*.swo
+
+

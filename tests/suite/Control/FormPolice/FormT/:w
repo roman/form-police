@@ -1,0 +1,12 @@
+module Control.FormPolice.FormT 
+  ( 
+  ) where
+
+  import           Data.Text (Text)
+  import           Data.Aeson 
+  
+
+  runFormT :: (Monad m) => FormT m a -> Value -> (a, FormState)
+  runFormT (FormT m) = runStateT m
+
+  
