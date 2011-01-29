@@ -6,11 +6,9 @@ module Control.FormPolice.FormT.Tests
   import           Test.HUnit (assertEqual, assertBool)
 
   import           Data.Text (Text)
-  import           Data.Aeson (FromJSON(..), Value, object, (.=))
+  import           Data.Aeson (Value, object, (.=))
   import           Data.Maybe (fromJust, isJust, isNothing)
   import           Data.Monoid (mempty)
-
-  import           Control.Monad ((>=>))
 
   import qualified Control.FormPolice.FormState as FS
   import qualified Control.FormPolice.Field as F
@@ -58,9 +56,8 @@ module Control.FormPolice.FormT.Tests
   testSetFieldValue :: Test
   testSetFieldValue = testCase "setFieldValue modifies value of current field in the FormState" $ do
     let fieldValue = ("john" :: Text)
-    (_, formState) <- runFormT (createField "name" >> setFieldValue fieldValue) emptyObject
-    let resultValue = maybe "" id $ (FS.getCurrentField >=> F.getValue >=> fromJSON) formState
-    assertEqual "setFieldValue is not setting correct value in FormState's current field" fieldValue resultValue
+    (result, _) <- runFormT (createField "name" >> setFieldValue fieldValue >> getFieldValue) emptyObject
+    assertEqual "setFieldValue is not setting correct value in FormState's current field" fieldValue result
 
   testGetFieldValueWithoutField :: Test
   testGetFieldValueWithoutField = testCase "getFieldValue returns mempty when current field is 'Nothing' in the FormState" $ do
