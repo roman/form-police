@@ -6,8 +6,10 @@ module Control.FormPolice.FormT
   , getParam
 
   , createField
-  , setFieldValue
   , getFieldValue
+  , setFieldValue
+  , getFieldErrors
+  , appendFieldError
 
   ) where
 
@@ -41,20 +43,29 @@ module Control.FormPolice.FormT
   getFormState :: (Monad m) => FormT m FormState
   getFormState = FormT get
 
+  getCurrentField :: (Monad m) => FormT m (Maybe Field)
+  getCurrentField = FS.getCurrentField `liftM` getFormState
+
   alterFormState :: (Monad m) => (FormState -> FormState) -> FormT m ()
   alterFormState fn = FormT (get >>= put . fn)
 
-  alterFormField :: (Monad m) => (Field -> Field) -> FormT m ()
-  alterFormField fn = alterFormState helper
+  alterCurrentField :: (Monad m) => (Field -> Field) -> FormT m ()
+  alterCurrentField fn = alterFormState helper
     where
       helper formState = FS.setCurrentField (fn `liftM` (FS.getCurrentField formState)) formState
     
   createField :: (Monad m) => Text -> FormT m ()
   createField name = alterFormState (FS.setCurrentField (Just $ F.createField name))
 
-  setFieldValue :: (Monad m, ToJSON a) => a -> FormT m ()
-  setFieldValue value = alterFormField (F.setValue value)
-
   getFieldValue :: (Monad m, Monoid a, FromJSON a) => FormT m a
   getFieldValue = getFormState >>= ((FS.getCurrentField >=> F.getValue >=> fromJSON) >>> maybe mempty id >>> return)
-  
+
+  setFieldValue :: (Monad m, ToJSON a) => a -> FormT m ()
+  setFieldValue value = alterCurrentField (F.setValue value)
+
+  getFieldErrors :: (Monad m) => FormT m [Text]
+  getFieldErrors = getCurrentField >>= ((F.getErrors `liftM`) >>> maybe mempty id >>> return)
+
+  appendFieldError :: (Monad m) => Text -> FormT m ()
+  appendFieldError errMsg = alterCurrentField (F.appendError errMsg)
+

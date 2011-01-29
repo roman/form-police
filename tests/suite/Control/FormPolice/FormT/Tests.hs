@@ -25,6 +25,7 @@ module Control.FormPolice.FormT.Tests
           , testGetFieldValueWithoutField 
           , testGetFieldValueWithFieldWithoutValue 
           , testGetFieldValueWithField 
+          , testAppendFieldError
           ]
   
   emptyObject :: Value
@@ -76,4 +77,10 @@ module Control.FormPolice.FormT.Tests
     let fieldValue = ("john" :: Text)
     (result, _) <- runFormT (createField "name" >> setFieldValue fieldValue >> getFieldValue) emptyObject
     assertEqual "getField value is not returning correct value" fieldValue result
+  
+  testAppendFieldError :: Test
+  testAppendFieldError = testCase "appendFieldError register errors on the current field in FormState" $ do
+    let fieldErrors = ["no good"] :: [Text]
+    (result, _) <- runFormT (createField "name" >> appendFieldError "no good" >> getFieldErrors) emptyObject
+    assertEqual "getFieldErrors is not returning errors of current field" fieldErrors result
 
