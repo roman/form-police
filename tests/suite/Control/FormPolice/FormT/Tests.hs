@@ -10,7 +10,10 @@ module Control.FormPolice.FormT.Tests
   import           Data.Maybe (fromJust, isJust, isNothing)
   import           Data.Monoid (mempty)
 
+  import           Control.Monad (liftM)
+
   import qualified Control.FormPolice.FormState as FS
+  import           Control.FormPolice.Field (FieldType(..))
   import qualified Control.FormPolice.Field as F
   import qualified Control.FormPolice.FieldMap as FM
   import           Control.FormPolice.FormT
@@ -26,6 +29,7 @@ module Control.FormPolice.FormT.Tests
           , testGetFieldValueWithField 
           , testAppendFieldError
           , testCommitField 
+          , testSetFieldType
           ]
   
   emptyObject :: Value
@@ -90,4 +94,11 @@ module Control.FormPolice.FormT.Tests
     let result = FM.lookup "name" $ FS.getFieldMap formState
     assertBool "CurrentField is not registered in the FormState FieldMap" (isJust result)
     assertEqual "Field returned was not the Current Field in FormState" "name" (F.getName $ fromJust result)
+
+  testSetFieldType :: Test
+  testSetFieldType = testCase "setFieldType sets a type to the current field in FormState" $ do
+    (_, formState) <- runFormT (createField "name" >> setFieldType TextareaField) emptyObject
+    let result = F.getFieldType `liftM` (FS.getCurrentField formState)
+    assertBool "setFieldType is not assiging a field type to the current field" (isJust result)
+    assertEqual "setFieldType is assigning correct field type" TextareaField (fromJust result)
 

@@ -11,6 +11,7 @@ module Control.FormPolice.FormT
   , getFieldErrors
   , appendFieldError
   , commitField
+  , setFieldType
 
   ) where
 
@@ -24,7 +25,7 @@ module Control.FormPolice.FormT
 
   import           Control.FormPolice.FormState (FormState)
   import qualified Control.FormPolice.FormState as FS
-  import           Control.FormPolice.Field (Field)
+  import           Control.FormPolice.Field (Field, FieldType)
   import qualified Control.FormPolice.Field as F
   import qualified Control.FormPolice.FieldMap as FM
 
@@ -77,6 +78,9 @@ module Control.FormPolice.FormT
         let field    = FS.getCurrentField formState 
             fieldMap = FS.getFieldMap formState
         in maybe formState (flip FS.setFieldMap formState . flip FM.insert fieldMap) field
+
+  setFieldType :: (Monad m) => FieldType -> FormT m ()
+  setFieldType fieldType = alterCurrentField (F.setFieldType fieldType)
                          
 
 
