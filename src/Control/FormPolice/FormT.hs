@@ -10,6 +10,7 @@ module Control.FormPolice.FormT
   , setFieldValue
   , getFieldErrors
   , appendFieldError
+  , commitField
 
   ) where
 
@@ -23,9 +24,9 @@ module Control.FormPolice.FormT
 
   import           Control.FormPolice.FormState (FormState)
   import qualified Control.FormPolice.FormState as FS
-
   import           Control.FormPolice.Field (Field)
   import qualified Control.FormPolice.Field as F
+  import qualified Control.FormPolice.FieldMap as FM
 
   newtype FormT m a = FormT (StateT FormState m a) deriving (Monad)
 
@@ -68,4 +69,14 @@ module Control.FormPolice.FormT
 
   appendFieldError :: (Monad m) => Text -> FormT m ()
   appendFieldError errMsg = alterCurrentField (F.appendError errMsg)
+
+  commitField :: (Monad m) => FormT m ()
+  commitField = alterFormState helper
+    where
+      helper formState = 
+        let field    = FS.getCurrentField formState 
+            fieldMap = FS.getFieldMap formState
+        in maybe formState (flip FS.setFieldMap formState . flip FM.insert fieldMap) field
+                         
+
 

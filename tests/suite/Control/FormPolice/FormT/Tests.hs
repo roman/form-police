@@ -12,6 +12,7 @@ module Control.FormPolice.FormT.Tests
 
   import qualified Control.FormPolice.FormState as FS
   import qualified Control.FormPolice.Field as F
+  import qualified Control.FormPolice.FieldMap as FM
   import           Control.FormPolice.FormT
 
   tests :: [Test]
@@ -24,6 +25,7 @@ module Control.FormPolice.FormT.Tests
           , testGetFieldValueWithFieldWithoutValue 
           , testGetFieldValueWithField 
           , testAppendFieldError
+          , testCommitField 
           ]
   
   emptyObject :: Value
@@ -80,4 +82,12 @@ module Control.FormPolice.FormT.Tests
     let fieldErrors = ["no good"] :: [Text]
     (result, _) <- runFormT (createField "name" >> appendFieldError "no good" >> getFieldErrors) emptyObject
     assertEqual "getFieldErrors is not returning errors of current field" fieldErrors result
+
+  testCommitField :: Test
+  testCommitField = testCase "commitField adds the current field to the field map of FormState" $ do
+    let value = "john" :: Text
+    (_, formState) <- runFormT (createField "name" >> setFieldValue value >> commitField) emptyObject
+    let result = FM.lookup "name" $ FS.getFieldMap formState
+    assertBool "CurrentField is not registered in the FormState FieldMap" (isJust result)
+    assertEqual "Field returned was not the Current Field in FormState" "name" (F.getName $ fromJust result)
 

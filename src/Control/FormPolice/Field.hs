@@ -35,3 +35,4 @@ module Control.FormPolice.Field
 
   appendError :: Text -> Field -> Field
   appendError errMsg field = field { fieldErrors = (errMsg:) $ fieldErrors field }
+
