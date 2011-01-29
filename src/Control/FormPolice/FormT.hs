@@ -4,6 +4,7 @@ module Control.FormPolice.FormT
   , runFormT
 
   , getParam
+  , createField
 
   ) where
 
@@ -11,10 +12,12 @@ module Control.FormPolice.FormT
   import           Data.Aeson (FromJSON, Object, Value, (.:))
 
   import           Control.Monad (liftM)
-  import           Control.Monad.State (StateT, runStateT, get)
+  import           Control.Monad.State (StateT, runStateT, get, put)
 
   import           Control.FormPolice.FormState (FormState)
   import qualified Control.FormPolice.FormState as FS
+
+  import qualified Control.FormPolice.Field as F
 
   newtype FormT m a = FormT (StateT FormState m a) deriving (Monad)
 
@@ -26,6 +29,13 @@ module Control.FormPolice.FormT
 
   getParam :: (FromJSON a, Monad m) => Text -> FormT m (Maybe a)
   getParam key = (.: key) `liftM` getParams
-    
 
+  --
+  --
+  alterFormState :: (Monad m) => (FormState -> FormState) -> FormT m ()
+  alterFormState fn = FormT (get >>= put . fn)
+    
+  createField :: (Monad m) => Text -> FormT m ()
+  createField name = alterFormState (FS.setCurrentField (F.createField name))
+    
   
