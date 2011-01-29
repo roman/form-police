@@ -7,14 +7,17 @@ module Control.FormPolice.FormT
 
   , createField
   , setFieldValue
+  , getFieldValue
 
   ) where
 
   import           Data.Text (Text)
-  import           Data.Aeson (ToJSON(..), FromJSON, Object, Value, (.:))
+  import           Data.Aeson (ToJSON(..), FromJSON(..), Object, Value, (.:))
+  import           Data.Monoid (Monoid, mempty)
 
-  import           Control.Monad (liftM)
+  import           Control.Monad (liftM, (>=>))
   import           Control.Monad.State (StateT, runStateT, get, put)
+  import           Control.Arrow ((>>>))
 
   import           Control.FormPolice.FormState (FormState)
   import qualified Control.FormPolice.FormState as FS
@@ -35,6 +38,9 @@ module Control.FormPolice.FormT
 
   --
   --
+  getFormState :: (Monad m) => FormT m FormState
+  getFormState = FormT get
+
   alterFormState :: (Monad m) => (FormState -> FormState) -> FormT m ()
   alterFormState fn = FormT (get >>= put . fn)
 
@@ -48,4 +54,7 @@ module Control.FormPolice.FormT
 
   setFieldValue :: (Monad m, ToJSON a) => a -> FormT m ()
   setFieldValue value = alterFormField (F.setValue value)
+
+  getFieldValue :: (Monad m, Monoid a, FromJSON a) => FormT m a
+  getFieldValue = getFormState >>= ((FS.getCurrentField >=> F.getValue >=> fromJSON) >>> maybe mempty id >>> return)
   

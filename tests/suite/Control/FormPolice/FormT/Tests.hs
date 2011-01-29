@@ -8,6 +8,7 @@ module Control.FormPolice.FormT.Tests
   import           Data.Text (Text)
   import           Data.Aeson (FromJSON(..), Value, object, (.=))
   import           Data.Maybe (fromJust, isJust, isNothing)
+  import           Data.Monoid (mempty)
 
   import           Control.Monad ((>=>))
 
@@ -21,6 +22,9 @@ module Control.FormPolice.FormT.Tests
           , testGetParamReturnsNothing 
           , testCreateField
           , testSetFieldValue 
+          , testGetFieldValueWithoutField 
+          , testGetFieldValueWithFieldWithoutValue 
+          , testGetFieldValueWithField 
           ]
   
   emptyObject :: Value
@@ -56,4 +60,20 @@ module Control.FormPolice.FormT.Tests
     (_, formState) <- runFormT (createField "name" >> setFieldValue fieldValue) emptyObject
     let resultValue = maybe "" id $ (FS.getCurrentField >=> F.getValue >=> fromJSON) formState
     assertEqual "setFieldValue is not setting correct value in FormState's current field" fieldValue resultValue
+
+  testGetFieldValueWithoutField :: Test
+  testGetFieldValueWithoutField = testCase "getFieldValue returns mempty when current field is 'Nothing' in the FormState" $ do
+    (result, _) <- runFormT (getFieldValue) emptyObject
+    assertEqual "getFieldValue is not returning mempty" mempty (result :: Text)
+
+  testGetFieldValueWithFieldWithoutValue :: Test
+  testGetFieldValueWithFieldWithoutValue = testCase "getFieldValue returns mempty when current field has no value in the FormState" $ do 
+    (result, _) <- runFormT (createField "name" >> getFieldValue) emptyObject
+    assertEqual "getFieldValue is not returning mempty" mempty (result :: Text)
+
+  testGetFieldValueWithField :: Test
+  testGetFieldValueWithField = testCase "getFieldValue returns value when current field has value in FormState" $ do
+    let fieldValue = ("john" :: Text)
+    (result, _) <- runFormT (createField "name" >> setFieldValue fieldValue >> getFieldValue) emptyObject
+    assertEqual "getField value is not returning correct value" fieldValue result
 
