@@ -4,12 +4,14 @@ module Control.FormPolice.FormT
   , runFormT
 
   , getParam
+
   , createField
+  , setFieldValue
 
   ) where
 
   import           Data.Text (Text)
-  import           Data.Aeson (FromJSON, Object, Value, (.:))
+  import           Data.Aeson (ToJSON(..), FromJSON, Object, Value, (.:))
 
   import           Control.Monad (liftM)
   import           Control.Monad.State (StateT, runStateT, get, put)
@@ -17,6 +19,7 @@ module Control.FormPolice.FormT
   import           Control.FormPolice.FormState (FormState)
   import qualified Control.FormPolice.FormState as FS
 
+  import           Control.FormPolice.Field (Field)
   import qualified Control.FormPolice.Field as F
 
   newtype FormT m a = FormT (StateT FormState m a) deriving (Monad)
@@ -34,8 +37,15 @@ module Control.FormPolice.FormT
   --
   alterFormState :: (Monad m) => (FormState -> FormState) -> FormT m ()
   alterFormState fn = FormT (get >>= put . fn)
+
+  alterFormField :: (Monad m) => (Field -> Field) -> FormT m ()
+  alterFormField fn = alterFormState helper
+    where
+      helper formState = FS.setCurrentField (fn `liftM` (FS.getCurrentField formState)) formState
     
   createField :: (Monad m) => Text -> FormT m ()
-  createField name = alterFormState (FS.setCurrentField (F.createField name))
-    
+  createField name = alterFormState (FS.setCurrentField (Just $ F.createField name))
+
+  setFieldValue :: (Monad m, ToJSON a) => a -> FormT m ()
+  setFieldValue value = alterFormField (F.setValue value)
   

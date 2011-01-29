@@ -28,6 +28,6 @@ module Control.FormPolice.FormState
   getCurrentField :: FormState -> Maybe (Field)
   getCurrentField = fsCurrentField
 
-  setCurrentField :: Field -> FormState -> FormState
-  setCurrentField field formState = formState { fsCurrentField = Just field }
+  setCurrentField :: Maybe Field -> FormState -> FormState
+  setCurrentField field formState = formState { fsCurrentField = field }
 
