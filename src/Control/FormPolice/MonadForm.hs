@@ -11,5 +11,5 @@ module Control.FormPolice.MonadForm where
     checkbox :: (Monoid a, FromJSON a) => Text -> m a
     radio    :: (Monoid a, FromJSON a) => Text -> [(Text, Text)] -> m a
     select   :: (Monoid a, FromJSON a) => Text -> [(Text, Text)] -> m a
-    nested   :: (Monoid a, FromJSON a) => Text -> m a -> m a
+    child    :: (Monoid a, FromJSON a) => Text -> m a -> m a
     

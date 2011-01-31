@@ -13,6 +13,7 @@ module Control.FormPolice.FormT
   , commitField
   , setFieldType
   , pushToChild
+  , createFormField 
 
   ) where
 
@@ -26,7 +27,7 @@ module Control.FormPolice.FormT
 
   import           Control.FormPolice.FormState (FormState)
   import qualified Control.FormPolice.FormState as FS
-  import           Control.FormPolice.Field (Field, FieldType)
+  import           Control.FormPolice.Field (Field, FieldType(..))
   import qualified Control.FormPolice.Field as F
   import qualified Control.FormPolice.FieldMap as FM
 
@@ -100,5 +101,20 @@ module Control.FormPolice.FormT
     case result of
       Just object -> localFormState (FS.setParams object) action
       Nothing     -> action
+
+  transaction :: (Monad m) => FormT m a -> FormT m a
+  transaction action = action >>= \a -> commitField >> return a
+  
+  createFormField :: (ToJSON a, FromJSON a, Monoid a, Monad m) => FieldType -> Text -> FormT m a
+  createFormField fieldType fieldName = transaction $ do
+    createField fieldName 
+    setFieldType fieldType
+    result <- getParam fieldName
+    case result of
+      Nothing    -> return mempty
+      Just value -> do 
+        setFieldValue value
+        return value
+
 
 
