@@ -4,11 +4,12 @@ module Control.FormPolice.MonadForm where
   import           Data.Aeson (FromJSON)
   import           Data.Monoid (Monoid)
   
-  class MonadForm m where
+  class (Monad m) => MonadForm m where
     text     :: (Monoid a, FromJSON a) => Text -> m a 
     password :: (Monoid a, FromJSON a) => Text -> m a
     textarea :: (Monoid a, FromJSON a) => Text -> m a
     checkbox :: (Monoid a, FromJSON a) => Text -> m a
     radio    :: (Monoid a, FromJSON a) => Text -> [(Text, Text)] -> m a
     select   :: (Monoid a, FromJSON a) => Text -> [(Text, Text)] -> m a
+    nested   :: (Monoid a, FromJSON a) => Text -> m a -> m a
     

@@ -12,6 +12,7 @@ module Control.FormPolice.FormT
   , appendFieldError
   , commitField
   , setFieldType
+  , pushToChild
 
   ) where
 
@@ -45,11 +46,22 @@ module Control.FormPolice.FormT
   getFormState :: (Monad m) => FormT m FormState
   getFormState = FormT get
 
+  setFormState :: (Monad m) => FormState -> FormT m ()
+  setFormState = FormT . put
+
   getCurrentField :: (Monad m) => FormT m (Maybe Field)
   getCurrentField = FS.getCurrentField `liftM` getFormState
 
   alterFormState :: (Monad m) => (FormState -> FormState) -> FormT m ()
   alterFormState fn = FormT (get >>= put . fn)
+
+  localFormState :: (Monad m) => (FormState -> FormState) -> FormT m a -> FormT m a
+  localFormState fn action = do
+    formState <- getFormState
+    setFormState (fn formState)
+    a <- action 
+    setFormState formState
+    return a
 
   alterCurrentField :: (Monad m) => (Field -> Field) -> FormT m ()
   alterCurrentField fn = alterFormState helper
@@ -81,6 +93,12 @@ module Control.FormPolice.FormT
 
   setFieldType :: (Monad m) => FieldType -> FormT m ()
   setFieldType fieldType = alterCurrentField (F.setFieldType fieldType)
-                         
+
+  pushToChild :: (Monad m) => Text -> FormT m a -> FormT m a
+  pushToChild name action = do
+    result <- getParam name
+    case result of
+      Just object -> localFormState (FS.setParams object) action
+      Nothing     -> action
 
 

@@ -30,6 +30,7 @@ module Control.FormPolice.FormT.Tests
           , testAppendFieldError
           , testCommitField 
           , testSetFieldType
+          , testPushToChild
           ]
   
   emptyObject :: Value
@@ -101,4 +102,11 @@ module Control.FormPolice.FormT.Tests
     let result = F.getFieldType `liftM` (FS.getCurrentField formState)
     assertBool "setFieldType is not assiging a field type to the current field" (isJust result)
     assertEqual "setFieldType is assigning correct field type" TextareaField (fromJust result)
+
+  testPushToChild :: Test
+  testPushToChild = testCase "pushToChild sets the current params of FormState to a child object" $ do
+    let value = "Vancouver" :: Text
+    let params = object ["address" .= object ["city" .= value]]
+    (result, _) <- runFormT (pushToChild "address" (getParam "city")) params
+    assertEqual "pushToChild is not changing the params of FormState" value (fromJust result)
 

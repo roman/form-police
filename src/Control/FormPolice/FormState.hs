@@ -2,6 +2,7 @@ module Control.FormPolice.FormState
   ( FormState
   , createState
   , getParams 
+  , setParams
   , getCurrentField
   , setCurrentField
   , getFieldMap
@@ -29,6 +30,9 @@ module Control.FormPolice.FormState
     case fsParams formState of
       (Object o) -> o
       _          -> error "peligro!"
+
+  setParams :: Value -> FormState -> FormState
+  setParams params formState = formState { fsParams = params }
 
   getCurrentField :: FormState -> Maybe (Field)
   getCurrentField = fsCurrentField
