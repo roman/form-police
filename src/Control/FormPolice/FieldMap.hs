@@ -1,21 +1,16 @@
 module Control.FormPolice.FieldMap 
   ( FieldMap
-  , M.empty
+  , empty
   , M.lookup
   , M.alter
-  , insert
   , M.null
+  , insert
   ) where
 
-  import           Data.Text (Text)
-
-  import           Data.Map (Map)
   import qualified Data.Map as M
 
-  import           Control.FormPolice.Field (Field)
+  import           Control.FormPolice.Field.Types (Field, FieldMap, empty)
   import qualified Control.FormPolice.Field as F
-
-  type FieldMap = Map Text Field
 
   insert :: Field -> FieldMap -> FieldMap
   insert field = M.alter (const $ Just field) (F.getName field)
