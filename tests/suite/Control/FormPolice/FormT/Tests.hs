@@ -118,9 +118,8 @@ module Control.FormPolice.FormT.Tests
   testPushToChildSetsFieldsChildFieldMap :: Test
   testPushToChildSetsFieldsChildFieldMap = testCase "pushToChild sets field's children fieldmap as the FormState fieldmap" $ do
     let action = pushToChild "address" (createField "city" >> commitField)
-    (_, formState) <- runFormT action (object ["address" .= object ["city" .= ("Vancouver" :: Text)]])
+    (_, formState) <- runFormT action emptyObject
     let ~(Just childrenFieldMap) = (F.getChildrenFieldMap `liftM`) . FM.lookup "address" . FS.getFieldMap $ formState
-    putStrLn $ show childrenFieldMap
     assertBool "field's children FieldMap is empty when it shouldn't" (not $ FM.null childrenFieldMap)
     assertBool "field's children FieldMap doesn't have expected key"  (isJust $ FM.lookup "city" childrenFieldMap)
 

@@ -22,6 +22,7 @@ module Control.FormPolice.FormT
   import           Data.Aeson (ToJSON(..), FromJSON(..), Object, Value(Object), (.:))
   import           Data.Monoid (Monoid, mempty)
   import           Data.Maybe (fromJust)
+  import qualified Data.Map as M
 
   import           Control.Monad (liftM, (>=>))
   import           Control.Monad.State (StateT, runStateT, get, put)
@@ -52,12 +53,6 @@ module Control.FormPolice.FormT
   setParams :: (Monad m) => Object -> FormT m ()
   setParams object = alterFormState (FS.setParams object)
 
-  getParam :: (FromJSON a, Monad m) => Text -> FormT m (Maybe a)
-  getParam key = (.: key) `liftM` getParams
-
-  --
-  --
-
   getCurrentField :: (Monad m) => FormT m (Maybe Field)
   getCurrentField = FS.getCurrentField `liftM` getFormState
 
@@ -67,11 +62,16 @@ module Control.FormPolice.FormT
   setFieldMap :: (Monad m) => FieldMap -> FormT m ()
   setFieldMap fieldMap = alterFormState (FS.setFieldMap fieldMap)
 
-
   alterCurrentField :: (Monad m) => (Field -> Field) -> FormT m ()
   alterCurrentField fn = alterFormState helper
     where
       helper formState = FS.setCurrentField (fn `liftM` (FS.getCurrentField formState)) formState
+
+  -- 
+  -- 
+  
+  getParam :: (FromJSON a, Monad m) => Text -> FormT m (Maybe a)
+  getParam key = (.: key) `liftM` getParams
     
   createField :: (Monad m) => Text -> FormT m ()
   createField name = alterFormState (FS.setCurrentField (Just $ F.createField name))
@@ -102,42 +102,9 @@ module Control.FormPolice.FormT
   setFieldPossibleValues :: (Monad m) => [(Text, Text)] -> FormT m ()
   setFieldPossibleValues values = alterCurrentField (F.setPossibleValues values)
 
-  pushToChild :: (Monoid a, Monad m) => Text -> FormT m a -> FormT m a
-  pushToChild name action = transaction $ do
-    createField name
-    value <- getParam name
-    case value of
-      Nothing              -> return mempty
-      Just (Object object) -> do 
-        -- backup the current fieldMap and params
-        field    <- fromJust `liftM` getCurrentField
-        fieldMap <- getFieldMap
-        params   <- getParams
-        
-        -- alter the state
-        setFieldMap FM.empty
-        setParams object
-
-        -- execute action
-        result <- action
-
-        -- get important info from lower state
-        childrenFieldMap <- getFieldMap
-
-        -- restore state
-        setFieldMap fieldMap
-        setParams params
-        let field' = F.setChildrenFieldMap childrenFieldMap field
-        alterCurrentField (const field')
-
-        -- return result from action
-        return result
-
-      Just _              -> return mempty
-
   transaction :: (Monad m) => FormT m a -> FormT m a
   transaction action = action >>= \a -> commitField >> return a
-  
+
   createFormField :: (ToJSON a, FromJSON a, Monoid a, Monad m) => FieldType -> [(Text, Text)] -> Text -> FormT m a
   createFormField fieldType fieldPossibleValues fieldName = transaction $ do
     createField fieldName 
@@ -150,6 +117,34 @@ module Control.FormPolice.FormT
         setFieldValue value
         return value
 
+  pushToChild :: (Monoid a, Monad m) => Text -> FormT m a -> FormT m a
+  pushToChild name action = transaction $ do
+    value <- getParam name
+    -- get a value for all different cases
+    let object = case value of
+                 Just (Object obj) -> obj
+                 Just  _           -> M.empty
+                 Nothing           -> M.empty
+    -- register the field name on the FieldState
+    createField name
+    -- backup the current fieldMap and params
+    field    <- fromJust `liftM` getCurrentField
+    fieldMap <- getFieldMap
+    params   <- getParams
+    -- alter the state
+    setFieldMap FM.empty
+    setParams object
+    -- execute action
+    result <- action
+    -- get important info from lower state
+    childrenFieldMap <- getFieldMap
+    -- restore state
+    setFieldMap fieldMap
+    setParams params
+    let field' = F.setChildrenFieldMap childrenFieldMap field
+    alterCurrentField (const field')
+    -- return result from action
+    return result
 
   instance (Monad m) => MonadForm (FormT m) where
     text     = createFormField TextField []
