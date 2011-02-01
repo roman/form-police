@@ -73,7 +73,7 @@ module Control.FormPolice.FormT.Tests
 
   testGetFieldValueWithoutField :: Test
   testGetFieldValueWithoutField = testCase "getFieldValue returns mempty when current field is 'Nothing' in the FormState" $ do
-    (result, _) <- runFormT (getFieldValue) emptyObject
+    (result, _) <- runFormT getFieldValue emptyObject
     assertEqual "getFieldValue is not returning mempty" mempty (result :: Text)
 
   testGetFieldValueWithFieldWithoutValue :: Test
@@ -104,7 +104,7 @@ module Control.FormPolice.FormT.Tests
   testSetFieldType :: Test
   testSetFieldType = testCase "setFieldType sets a type to the current field in FormState" $ do
     (_, formState) <- runFormT (createField "name" >> setFieldType TextareaField) emptyObject
-    let result = F.getFieldType `liftM` (FS.getCurrentField formState)
+    let result = F.getFieldType `liftM` FS.getCurrentField formState
     assertBool "setFieldType is not assiging a field type to the current field" (isJust result)
     assertEqual "setFieldType is assigning correct field type" TextareaField (fromJust result)
 

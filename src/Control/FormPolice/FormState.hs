@@ -33,9 +33,9 @@ module Control.FormPolice.FormState
       _          -> error "peligro!"
 
   setParams :: Object -> FormState -> FormState
-  setParams params formState = formState { fsParams = (Object params) }
+  setParams params formState = formState { fsParams = Object params }
 
-  getCurrentField :: FormState -> Maybe (Field)
+  getCurrentField :: FormState -> Maybe Field
   getCurrentField = fsCurrentField
 
   setCurrentField :: Maybe Field -> FormState -> FormState

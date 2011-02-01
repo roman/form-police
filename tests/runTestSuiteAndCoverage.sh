@@ -30,7 +30,8 @@ DIR=dist/hpc
 rm -Rf $DIR
 mkdir -p $DIR
 
-EXCLUDES='Main'
+EXCLUDES='Main
+Control.FormPolice.FormT.Tests'
 
 EXCL=""
 
