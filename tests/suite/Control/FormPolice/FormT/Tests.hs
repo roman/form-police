@@ -30,6 +30,7 @@ module Control.FormPolice.FormT.Tests
           , testAppendFieldError
           , testCommitField 
           , testSetFieldType
+          , testSetFieldPossibleValues 
           , testPushToChild
           , testCreateFormFieldReturnsValueFromParams 
           , testCreateFormFieldReturnsMemptyFromParams 
@@ -130,4 +131,12 @@ module Control.FormPolice.FormT.Tests
     (_, formState) <- runFormT (createFormField TextField "name" :: (Monad m) => FormT m Text) (object ["name" .= value])
     let field = FM.lookup "name" $ FS.getFieldMap formState
     assertBool "createFormField is not adding a new field to the FieldMap of the FormState" (isJust field)
+
+  testSetFieldPossibleValues :: Test
+  testSetFieldPossibleValues = testCase "setFieldPossibleValues adds possible values to current field in FormState" $ do
+    let possibleValues = [("name", "john")] :: [(Text, Text)]
+    (_, formState) <- runFormT (createField "name" >> setFieldPossibleValues possibleValues) emptyObject
+    let field = fromJust $ FS.getCurrentField formState
+    assertEqual "setFieldPossibleValues is not setting values on current field" possibleValues (F.getPossibleValues field)
+
     

@@ -9,6 +9,8 @@ module Control.FormPolice.Field
   , appendError
   , getFieldType
   , setFieldType
+  , getPossibleValues
+  , setPossibleValues
   ) where
 
   import           Data.Text (Text)
@@ -27,10 +29,11 @@ module Control.FormPolice.Field
     , fieldValue  :: Maybe Value
     , fieldErrors :: [Text]
     , fieldType   :: FieldType
+    , fieldPossibleValues :: [(Text, Text)]
     }
 
   createField :: Text -> Field
-  createField name = Field name Nothing [] TextField
+  createField name = Field name Nothing [] TextField []
 
   getName :: Field -> Text
   getName = fieldName
@@ -52,4 +55,10 @@ module Control.FormPolice.Field
 
   setFieldType :: FieldType -> Field -> Field
   setFieldType fType field = field { fieldType = fType }
+
+  getPossibleValues :: Field -> [(Text, Text)]
+  getPossibleValues = fieldPossibleValues
+
+  setPossibleValues :: [(Text, Text)] -> Field -> Field
+  setPossibleValues values field = field { fieldPossibleValues = values }
 

@@ -12,6 +12,7 @@ module Control.FormPolice.FormT
   , appendFieldError
   , commitField
   , setFieldType
+  , setFieldPossibleValues
   , pushToChild
   , createFormField 
 
@@ -95,6 +96,9 @@ module Control.FormPolice.FormT
 
   setFieldType :: (Monad m) => FieldType -> FormT m ()
   setFieldType fieldType = alterCurrentField (F.setFieldType fieldType)
+
+  setFieldPossibleValues :: (Monad m) => [(Text, Text)] -> FormT m ()
+  setFieldPossibleValues values = alterCurrentField (F.setPossibleValues values)
 
   pushToChild :: (Monad m) => Text -> FormT m a -> FormT m a
   pushToChild name action = do
