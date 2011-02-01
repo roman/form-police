@@ -30,6 +30,7 @@ module Control.FormPolice.FormT
   import           Control.FormPolice.Field (Field, FieldType(..))
   import qualified Control.FormPolice.Field as F
   import qualified Control.FormPolice.FieldMap as FM
+  import           Control.FormPolice.MonadForm
 
   newtype FormT m a = FormT (StateT FormState m a) deriving (Monad)
 
@@ -116,5 +117,11 @@ module Control.FormPolice.FormT
         setFieldValue value
         return value
 
+
+  instance (Monad m) => MonadForm (FormT m) where
+    text     = createFormField TextField
+    password = createFormField PasswordField
+    textarea = createFormField TextareaField
+    checkbox = createFormField CheckboxField
 
 

@@ -17,6 +17,8 @@ module Control.FormPolice.Field
   data FieldType 
     = TextField
     | TextareaField
+    | PasswordField
+    | CheckboxField
     deriving (Show, Eq)
   
   data Field = 
