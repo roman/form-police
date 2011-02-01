@@ -31,7 +31,8 @@ module Control.FormPolice.FormT.Tests
           , testCommitField 
           , testSetFieldType
           , testSetFieldPossibleValues 
-          , testPushToChild
+          , testPushToChildSetsFieldsChildFieldMap 
+          , testPushToChildChangeParams 
           , testCreateFormFieldReturnsValueFromParams 
           , testCreateFormFieldReturnsMemptyFromParams 
           , testCreateFormFieldAddsNewFieldToFieldMap 
@@ -107,28 +108,37 @@ module Control.FormPolice.FormT.Tests
     assertBool "setFieldType is not assiging a field type to the current field" (isJust result)
     assertEqual "setFieldType is assigning correct field type" TextareaField (fromJust result)
 
-  testPushToChild :: Test
-  testPushToChild = testCase "pushToChild sets the current params of FormState to a child object" $ do
+  testPushToChildChangeParams :: Test
+  testPushToChildChangeParams = testCase "pushToChild sets the current params of FormState to a child object" $ do
     let value = "Vancouver" :: Text
     let params = object ["address" .= object ["city" .= value]]
     (result, _) <- runFormT (pushToChild "address" (getParam "city")) params
     assertEqual "pushToChild is not changing the params of FormState" value (fromJust result)
 
+  testPushToChildSetsFieldsChildFieldMap :: Test
+  testPushToChildSetsFieldsChildFieldMap = testCase "pushToChild sets field's children fieldmap as the FormState fieldmap" $ do
+    let action = pushToChild "address" (createField "city" >> commitField)
+    (_, formState) <- runFormT action (object ["address" .= object ["city" .= ("Vancouver" :: Text)]])
+    let ~(Just childrenFieldMap) = (F.getChildrenFieldMap `liftM`) . FM.lookup "address" . FS.getFieldMap $ formState
+    putStrLn $ show childrenFieldMap
+    assertBool "field's children FieldMap is empty when it shouldn't" (not $ FM.null childrenFieldMap)
+    assertBool "field's children FieldMap doesn't have expected key"  (isJust $ FM.lookup "city" childrenFieldMap)
+
   testCreateFormFieldReturnsValueFromParams :: Test
   testCreateFormFieldReturnsValueFromParams = testCase "createFormField returns value from params" $ do
     let params = object ["name" .= ("joe" :: Text), "address" .= object ["city" .= ("Vancouver" :: Text)]]
-    (result, _) <- runFormT (createFormField TextField "name") params
+    (result, _) <- runFormT (createFormField TextField [] "name") params
     assertEqual "createFormField is not returning param with same name" ("joe" :: Text) result
 
   testCreateFormFieldReturnsMemptyFromParams :: Test
   testCreateFormFieldReturnsMemptyFromParams = testCase "createFormField returns mempty when key not in params" $ do
-    (result, _) <- runFormT (createFormField TextareaField "name") emptyObject
+    (result, _) <- runFormT (createFormField TextareaField [] "name") emptyObject
     assertEqual "createFormField is not returning mempty when key not found" (mempty :: Text) result
 
   testCreateFormFieldAddsNewFieldToFieldMap :: Test
   testCreateFormFieldAddsNewFieldToFieldMap = testCase "createFormField adds new field to FieldMap in FormState" $ do
     let value = "john" :: Text
-    (_, formState) <- runFormT (createFormField TextField "name" :: (Monad m) => FormT m Text) (object ["name" .= value])
+    (_, formState) <- runFormT (createFormField TextField [] "name" :: (Monad m) => FormT m Text) (object ["name" .= value])
     let field = FM.lookup "name" $ FS.getFieldMap formState
     assertBool "createFormField is not adding a new field to the FieldMap of the FormState" (isJust field)
 

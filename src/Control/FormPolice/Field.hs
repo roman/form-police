@@ -11,16 +11,24 @@ module Control.FormPolice.Field
   , setFieldType
   , getPossibleValues
   , setPossibleValues
+  , getChildrenFieldMap
+  , setChildrenFieldMap
   ) where
 
   import           Data.Text (Text)
   import           Data.Aeson (Value, ToJSON (..))
+
+  import           Data.Map (Map)
+  import qualified Data.Map as M
+
 
   data FieldType 
     = TextField
     | TextareaField
     | PasswordField
     | CheckboxField
+    | SelectField
+    | RadioField
     deriving (Show, Eq)
   
   data Field = 
@@ -30,10 +38,13 @@ module Control.FormPolice.Field
     , fieldErrors :: [Text]
     , fieldType   :: FieldType
     , fieldPossibleValues :: [(Text, Text)]
+    , fieldChildren :: Map Text Field
     }
+    deriving (Show)
+
 
   createField :: Text -> Field
-  createField name = Field name Nothing [] TextField []
+  createField name = Field name Nothing [] TextField [] M.empty
 
   getName :: Field -> Text
   getName = fieldName
@@ -61,4 +72,10 @@ module Control.FormPolice.Field
 
   setPossibleValues :: [(Text, Text)] -> Field -> Field
   setPossibleValues values field = field { fieldPossibleValues = values }
+
+  getChildrenFieldMap :: Field -> Map Text Field
+  getChildrenFieldMap = fieldChildren
+
+  setChildrenFieldMap :: Map Text Field -> Field -> Field
+  setChildrenFieldMap fieldMap field = field { fieldChildren = fieldMap }
 

@@ -21,6 +21,7 @@ module Control.FormPolice.FormState
     , fsCurrentField :: Maybe Field
     , fsFieldMap :: FieldMap
     }
+    deriving (Show)
 
   createState :: Value -> FormState
   createState params = FormState params Nothing FM.empty
@@ -31,8 +32,8 @@ module Control.FormPolice.FormState
       (Object o) -> o
       _          -> error "peligro!"
 
-  setParams :: Value -> FormState -> FormState
-  setParams params formState = formState { fsParams = params }
+  setParams :: Object -> FormState -> FormState
+  setParams params formState = formState { fsParams = (Object params) }
 
   getCurrentField :: FormState -> Maybe (Field)
   getCurrentField = fsCurrentField

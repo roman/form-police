@@ -2,7 +2,9 @@ module Control.FormPolice.FieldMap
   ( FieldMap
   , M.empty
   , M.lookup
+  , M.alter
   , insert
+  , M.null
   ) where
 
   import           Data.Text (Text)
