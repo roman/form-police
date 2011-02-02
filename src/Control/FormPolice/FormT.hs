@@ -157,7 +157,7 @@ module Control.FormPolice.FormT
   --
 
   instance (Monad m) => MonadForm (FormT m) where
-    appendError = appendFieldError
+    appendError = transaction . appendFieldError
     getValue = getFieldValue
 
     text     = createFormField TextField []
