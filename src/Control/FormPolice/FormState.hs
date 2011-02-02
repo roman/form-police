@@ -10,6 +10,7 @@ module Control.FormPolice.FormState
   ) where
   
   import           Data.Aeson (Value(..), Object)  
+  import qualified Data.Map as M 
 
   import           Control.FormPolice.Field (Field)
   import           Control.FormPolice.FieldMap (FieldMap)
@@ -30,7 +31,7 @@ module Control.FormPolice.FormState
   getParams formState = 
     case fsParams formState of
       (Object o) -> o
-      _          -> error "peligro!"
+      _          -> M.empty
 
   setParams :: Object -> FormState -> FormState
   setParams params formState = formState { fsParams = Object params }
