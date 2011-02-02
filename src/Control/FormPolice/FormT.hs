@@ -16,6 +16,8 @@ module Control.FormPolice.FormT
   , pushToChild
   , createFormField 
 
+  , MonadForm (..)
+
   ) where
 
   import           Data.Text (Text)
@@ -23,10 +25,12 @@ module Control.FormPolice.FormT
   import           Data.Monoid (Monoid, mempty)
   import           Data.Maybe (fromMaybe, fromJust)
   import qualified Data.Map as M
+  import           Data.Functor
 
-  import           Control.Monad (liftM, (>=>))
+  import           Control.Monad (ap, liftM, (>=>))
   import           Control.Monad.State (StateT, runStateT, get, put)
   import           Control.Arrow ((>>>))
+  import           Control.Applicative
 
   import           Control.FormPolice.FormState (FormState)
   import qualified Control.FormPolice.FormState as FS
@@ -41,11 +45,22 @@ module Control.FormPolice.FormT
   runFormT :: (Monad m) => FormT m a -> Value -> m (a, FormState)
   runFormT (FormT m) value = runStateT m (FS.createState value)
 
+  -- Accessors for the Monad
+  -- 
+
   getFormState :: (Monad m) => FormT m FormState
   getFormState = FormT get
 
   alterFormState :: (Monad m) => (FormState -> FormState) -> FormT m ()
   alterFormState fn = FormT (get >>= put . fn)
+
+  getCurrentField :: (Monad m) => FormT m (Maybe Field)
+  getCurrentField = FS.getCurrentField `liftM` getFormState
+
+  alterCurrentField :: (Monad m) => (Field -> Field) -> FormT m ()
+  alterCurrentField fn = alterFormState helper
+    where
+      helper formState = FS.setCurrentField (fn `liftM` FS.getCurrentField formState) formState
 
   getParams :: (Monad m) => FormT m Object
   getParams = FS.getParams `liftM` getFormState
@@ -53,19 +68,11 @@ module Control.FormPolice.FormT
   setParams :: (Monad m) => Object -> FormT m ()
   setParams object = alterFormState (FS.setParams object)
 
-  getCurrentField :: (Monad m) => FormT m (Maybe Field)
-  getCurrentField = FS.getCurrentField `liftM` getFormState
-
   getFieldMap :: (Monad m) => FormT m FieldMap
   getFieldMap = FS.getFieldMap `liftM` getFormState
 
   setFieldMap :: (Monad m) => FieldMap -> FormT m ()
   setFieldMap fieldMap = alterFormState (FS.setFieldMap fieldMap)
-
-  alterCurrentField :: (Monad m) => (Field -> Field) -> FormT m ()
-  alterCurrentField fn = alterFormState helper
-    where
-      helper formState = FS.setCurrentField (fn `liftM` FS.getCurrentField formState) formState
 
   -- 
   -- 
@@ -146,6 +153,9 @@ module Control.FormPolice.FormT
     -- return result from action
     return result
 
+  -- FormT instances implementations
+  --
+
   instance (Monad m) => MonadForm (FormT m) where
     text     = createFormField TextField []
     password = createFormField PasswordField []
@@ -154,4 +164,11 @@ module Control.FormPolice.FormT
     select   = flip (createFormField SelectField)
     radio    = flip (createFormField RadioField)
     child    = pushToChild
+
+  instance (Functor m, Monad m) => Functor (FormT m) where
+    fmap = liftM
+
+  instance (Applicative m, Monad m) => Applicative (FormT m) where
+    pure  = return
+    (<*>) = ap
 
