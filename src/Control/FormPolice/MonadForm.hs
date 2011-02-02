@@ -5,6 +5,9 @@ module Control.FormPolice.MonadForm where
   import           Data.Monoid (Monoid)
   
   class (Monad m) => MonadForm m where
+    appendError   :: Text -> m ()
+    getValue :: (Monoid a, FromJSON a) => m a
+
     text     :: (Monoid a, ToJSON a, FromJSON a) => Text -> m a 
     password :: (Monoid a, ToJSON a, FromJSON a) => Text -> m a
     textarea :: (Monoid a, ToJSON a, FromJSON a) => Text -> m a
